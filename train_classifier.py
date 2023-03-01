@@ -115,14 +115,15 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                     #print('outputs: ', outputs)    
 
                 # statistics
-                print('preds: ', preds)
-                print('labels:', labels.data)
-                print('match: ', int(torch.sum(preds == labels.data)))
+                if phase == 'valid':
+                    print('preds: ', preds)
+                    print('labels:', labels.data)
+                    print('match: ', int(torch.sum(preds == labels.data)))
 
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
-            if SHOW_BAR: bar.finish()    
+            if SHOW_BAR: bar.finish()
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
@@ -146,13 +147,13 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc))
 
-    print("\nEp: TrainLoss ValLoss | TrainAcc ValAcc")
+    print("\nEp | TrLoss ValLoss | TrAcc ValAcc")
     for epoch in range(num_epochs):
         train_loss = history[epoch]['train']['loss']
         valid_loss = history[epoch]['valid']['loss']
         train_acc = history[epoch]['train']['acc']
         valid_acc = history[epoch]['valid']['acc']
-        print('{}: {:.4f} {:.4f} | {:.3f} {:.3f}'.format(epoch, train_loss, valid_loss, train_acc, valid_acc))
+        print('{}:   {:.4f} {:.4f} | {:.3f} {:.3f}'.format(epoch, train_loss, valid_loss, train_acc, valid_acc))
 
     # load best model weights
     model.load_state_dict(best_model_wts)

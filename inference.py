@@ -157,6 +157,7 @@ def model_testing(model, src_dir):
 def inference_directory(in_dir, model):
     """ in_dir - a directory with pictures
     """
+    counts = {}
     with open("_inference_output.txt", "wt") as outfp:
 
         for filename in os.listdir(in_dir):
@@ -178,8 +179,9 @@ def inference_directory(in_dir, model):
             #print('topk_class_names:', topk_class_names)
             print('class={} (idx={}), prob={:.2f}, in {:.2f} sec. - {}'.format(class_name, predict, max_prob, t2 - t1, filename))
             outfp.write("{} [{:.2f}] - {}\n".format(class_name, max_prob, filename))
+            counts[class_name] = 1 + counts[class_name] if class_name in counts else 1
 
-
+    print("counts:", counts)
 
 if __name__ == "__main__":
 
@@ -190,7 +192,8 @@ if __name__ == "__main__":
     else:
         #in_dir = "../test2/"
         #in_dir="../dataset_abs/valid/1/"
-        in_dir = "/data/5_patexia_2023/41_classiffier/dataset/train/1/"
+        #in_dir = "/data/5_patexia_2023/41_classiffier/dataset/valid/2/"
+        in_dir = "/data/5_patexia_2023/41_classiffier/dataset/train/2/"
 
     inference_directory(in_dir=in_dir, model=full_model)
     
