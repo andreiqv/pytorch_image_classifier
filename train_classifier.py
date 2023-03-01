@@ -36,7 +36,7 @@ import settings
 data_dir = settings.data_dir 
 
 
-num_epochs = 5; start_lr = 0.002; step_size = 2
+num_epochs = 6; start_lr = 0.002; step_size = 2
 
 
 #root = '/home/andrei/Data/Datasets/Scales/classifier_dataset_181018/'

@@ -3,6 +3,8 @@
 """
 First run split_dataset.py to split dataset in train|valid|test parts.
 Then run this script.
+
+source /mnt/ext1/venv/torch/bin/activate
 """
 
 from __future__ import print_function, division
@@ -79,7 +81,9 @@ model_path = "model_state.pt"
 model.load_state_dict(torch.load(model_path))
 model.eval()
 """
-model_full = torch.load("model_full.pt")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+full_model = torch.load("model_full.pt")
+full_model = full_model.to(device)
 print("Loading model is done.")
 
 
@@ -87,7 +91,7 @@ def inference(model, img, k=1):
 
     #IMAGE_SIZE = (224,224)
     #img = img.resize(IMAGE_SIZE)
-    print("img size:", img.size)
+    #print("img size:", img.size)
 
     img = data_transforms['valid'](img)
     #inputs = Variable(img, volatile=True)
@@ -98,9 +102,9 @@ def inference(model, img, k=1):
     outputs = model(inputs) # inference
     
     output = outputs[0].detach().cpu().numpy()
-    #print(output)
+    # print(output)
     normalized_output = softmax(output)
-    print("normalized_output:", normalized_output)
+    # print("normalized_output:", normalized_output)
     max_index = np.argmax(output)
     max_prob = normalized_output[max_index]
 
@@ -150,25 +154,31 @@ def model_testing(model, src_dir):
 
 
 
-def inference_directory(in_dir):
+def inference_directory(in_dir, model):
     """ in_dir - a directory with pictures
     """
-    for filename in os.listdir(in_dir):
-        print("\n{}".format(filename))
-        path = os.path.join(in_dir, filename)
-        img = Image.open(path)
-        rgb_img = Image.new("RGB", img.size)
-        rgb_img.paste(img)
-        rgb_img = rgb_img.resize((224, 224))
-        t1 = time.time()
-        predict, topk_predicts, max_prob = inference(model, rgb_img)
-        t2 = time.time()
-        print("Inference time = {:.2f}".format(t2 - t1))
-        topk_class_names = list(map(lambda idx: idx_to_class[idx], topk_predicts))
-        print('predict: {} (idx={})'.format(idx_to_class[predict], predict))
-        print("max_prob: {:.2f}".format(max_prob))
-        #print('top-6:', topk_predicts)
-        #print('topk_class_names:', topk_class_names)
+    with open("_inference_output.txt", "wt") as outfp:
+
+        for filename in os.listdir(in_dir):
+            #print("\n{}".format(filename))
+            path = os.path.join(in_dir, filename)
+            img = Image.open(path)
+            rgb_img = Image.new("RGB", img.size)
+            rgb_img.paste(img)
+            rgb_img = rgb_img.resize((224, 224))
+            t1 = time.time()
+            predict, topk_predicts, max_prob = inference(model, rgb_img)
+            t2 = time.time()
+            topk_class_names = list(map(lambda idx: idx_to_class[idx], topk_predicts))
+            class_name = idx_to_class[predict]
+            #print("Inference time = {:.2f}".format(t2 - t1))
+            #print('predict: {} (idx={})'.format(idx_to_class[predict], predict))
+            #print("max_prob: {:.2f}".format(max_prob))
+            #print('top-6:', topk_predicts)
+            #print('topk_class_names:', topk_class_names)
+            print('class={} (idx={}), prob={:.2f}, in {:.2f} sec. - {}'.format(class_name, predict, max_prob, t2 - t1, filename))
+            outfp.write("{} [{:.2f}] - {}\n".format(class_name, max_prob, filename))
+
 
 
 if __name__ == "__main__":
@@ -178,10 +188,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         in_dir = sys.argv[1]
     else:
-        in_dir = "../test2/"
+        #in_dir = "../test2/"
         #in_dir="../dataset_abs/valid/1/"
+        in_dir = "/data/5_patexia_2023/41_classiffier/dataset/train/1/"
 
-    inference_directory(in_dir=in_dir)
+    inference_directory(in_dir=in_dir, model=full_model)
     
     """
     img_file = '/data/5_patexia/image_classifier/0190_TRNA.png'
